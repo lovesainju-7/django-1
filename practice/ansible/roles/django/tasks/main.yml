@@ -1,0 +1,51 @@
+---
+# 1. Install Docker on server
+- name: Install Docker
+  apt:
+    name: docker.io
+    state: present
+    update_cache: yes
+
+# 2. Start Docker
+- name: Start Docker service
+  service:
+    name: docker
+    state: started
+    enabled: true
+
+# 3. Login to DockerHub
+- name: Login to DockerHub
+  community.docker.docker_login:
+    username: "{{ dockerhub_username }}"
+    password: "{{ dockerhub_password }}"
+
+# 4. Pull your image
+- name: Pull image
+  community.docker.docker_image:
+    name: "{{ dockerhub_username }}/djangoapp:latest"
+    source: pull
+    force_source: yes
+
+# 5. Stop AND remove old container
+- name: Remove old container
+  community.docker.docker_container:
+    name: djangoapp
+    state: absent # stops AND removes it
+  ignore_errors: yes
+
+# # 6. Kill anything running on port 80
+# - name: Free up port 80
+#   shell: fuser -k 80/tcp
+#   ignore_errors: yes
+
+# 7. Run new container
+- name: Run container
+  community.docker.docker_container:
+    name: djangoapp
+    image: "{{ dockerhub_username }}/djangoapp:latest"
+    state: started
+    restart_policy: always
+    ports:
+      - "3000:8000"
+    env:
+      SECRET_KEY: "{{ secret_key }}"

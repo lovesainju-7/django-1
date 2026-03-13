@@ -1,0 +1,7 @@
+---
+- name: Deploy Django Docker Image
+  hosts: webservers
+  become: true
+
+  roles:
+    - django
